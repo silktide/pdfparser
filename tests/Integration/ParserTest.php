@@ -1,11 +1,14 @@
 <?php
 
 /**
- * @file
- *          This file is part of the PdfParser library.
+ * @file This file is part of the PdfParser library.
+ *
+ * @author  Konrad Abicht <k.abicht@gmail.com>
+ * @date    2020-06-01
  *
  * @author  Sébastien MALOT <sebastien@malot.fr>
  * @date    2017-01-03
+ *
  * @license LGPLv3
  * @url     <https://github.com/smalot/pdfparser>
  *
@@ -25,38 +28,46 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.
  *  If not, see <http://www.pdfparser.org/sites/default/LICENSE.txt>.
- *
  */
 
-namespace Smalot\PdfParser\Tests\Units;
+namespace Tests\Smalot\PdfParser\Integration;
 
-use mageekguy\atoum;
+use Exception;
+use Smalot\PdfParser\Parser;
+use Test\Smalot\PdfParser\TestCase;
 
-/**
- * Class Parser
- *
- * @package Smalot\PdfParser\Tests\Units
- */
-class Parser extends atoum\test
+class ParserTest extends TestCase
 {
+    public function setUp()
+    {
+        parent::setUp();
+
+        $this->fixture = new Parser();
+    }
+
     public function testParseFile()
     {
-        $directory = getcwd() . '/samples/bugs';
+        $directory = $this->rootDir.'/samples/bugs';
 
         if (is_dir($directory)) {
-            $files  = scandir($directory);
-            $parser = new \Smalot\PdfParser\Parser();
+            $files = scandir($directory);
 
             foreach ($files as $file) {
                 if (preg_match('/^.*\.pdf$/i', $file)) {
                     try {
-                        $document = $parser->parseFile($directory . '/' . $file);
-                        $pages    = $document->getPages();
-                        $page     = $pages[0];
-                        $content  = $page->getText();
-                        $this->assert->string($content);
-                    } catch (\Exception $e) {
-                        if ($e->getMessage() != 'Secured pdf file are currently not supported.' && strpos($e->getMessage(), 'TCPDF_PARSER') != 0) {
+                        $document = $this->fixture->parseFile($directory.'/'.$file);
+                        $pages = $document->getPages();
+                        $this->assertTrue(0 < \count($pages));
+
+                        foreach ($pages as $page) {
+                            $content = $page->getText();
+                            $this->assertTrue(0 < \strlen($content));
+                        }
+                    } catch (Exception $e) {
+                        if (
+                            'Secured pdf file are currently not supported.' !== $e->getMessage()
+                            && 0 != strpos($e->getMessage(), 'TCPDF_PARSER')
+                        ) {
                             throw $e;
                         }
                     }
