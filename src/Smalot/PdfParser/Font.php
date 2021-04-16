@@ -479,7 +479,9 @@ class Font extends PDFObject
                     for ($i = 0; $i < $length; ++$i) {
                         $dec_av = hexdec(bin2hex($text[$i]));
                         $dec_ap = $encoding->translateChar($dec_av);
-                        $result .= \chr($dec_ap);
+                        if (is_int($dec_ap)) {
+                            $result .= \chr($dec_ap);
+                        }
                     }
 
                     $text = $result;
